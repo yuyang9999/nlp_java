@@ -168,7 +168,6 @@ public class TextParser {
         }
 
         Collections.sort(allWords, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Integer cnt1 = (Integer) o1.get(KeyWords.countKey);
                 Integer cnt2 = (Integer) o2.get(KeyWords.countKey);

@@ -53,6 +53,26 @@
             <version>1.10.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>de.jetwick</groupId>
+            <artifactId>snacktory</artifactId>
+            <version>1.1</version>
+            <!-- or if you prefer the latest build <version>1.2-SNAPSHOT</version> -->
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.18</version>
+        </dependency>
+
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>karussell_releases</id>
+            <url>https://github.com/karussell/mvnrepo/raw/master/releases/</url>
+        </repository>
+    </repositories>
 
 </project>
