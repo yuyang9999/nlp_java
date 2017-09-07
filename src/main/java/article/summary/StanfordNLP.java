@@ -1,6 +1,7 @@
 package article.summary;
 
 
+import com.sun.tools.javac.comp.Annotate;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.coref.data.Mention;
@@ -10,6 +11,8 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStructure;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 import org.ansj.domain.Result;
@@ -35,62 +38,21 @@ public class StanfordNLP {
     }
 
     public StanfordNLP(String[] sentences) {
+        System.out.println("original sentences");
+        for (String s: sentences) {
+            System.out.println(s);
+        }
+
+
         this.articleSentences = sentences;
     }
 
     public String[] decorefSentences() {
         //use ansj to do the cut the sentences
-        List<String> terms = new ArrayList<String>();
-        List<Integer> endSentIndexes = new ArrayList<Integer>();
-
-        for (String sen: articleSentences) {
-            Result splitResult = ToAnalysis.parse(sen);
-            boolean added = false;
-            for (Term term: splitResult.getTerms()) {
-                if (StringUtil.isBlank(term.getRealName())) {
-                    continue;
-                }
-                terms.add(term.getRealName());
-                added = true;
-            }
-            if (added) {
-                //record this is the end of one sentences
-                endSentIndexes.add(terms.size()-1);
-            }
-        }
-
-        //use pipeline to do the de-coref
-        String termText = StringUtil.join(terms, " ");
-        Annotation document = new Annotation(termText);
-        pipeline.annotate(document);
-
-        Map<Integer, DecorefPosition> refMap = getDecorefMap(document, terms, endSentIndexes);
+        Annotation document = getAnnotationFromSentences(this.articleSentences);
 
         //collected sentences
-        List<String> retSentences = new ArrayList<String>();
-
-        String oneSentence = "";
-        for (int i = 0; i < terms.size();) {
-            String term = terms.get(i);
-            int stride = 1;
-            if (refMap.containsKey(i)) {
-                //use decoref string
-                DecorefPosition pos = refMap.get(i);
-
-                oneSentence += pos.getRefString();
-                stride = pos.getEndIdx() - pos.getStartIdx();
-            } else {
-                //use original term
-                oneSentence += term;
-            }
-            if (endSentIndexes.indexOf(i) != -1) {
-                //this is the end of sentences
-                retSentences.add(oneSentence);
-                oneSentence = "";
-            }
-
-            i += stride;
-        }
+        List<String> retSentences = getDecorefDocumentSentences(document);
 
         return retSentences.toArray(new String[retSentences.size()]);
     }
@@ -116,6 +78,33 @@ public class StanfordNLP {
 
     }
 
+    private Annotation getAnnotationFromSentences(String[] sentences) {
+        //use ansj to do the cut the sentences
+        List<String> terms = new ArrayList<String>();
+
+        for (String sen: articleSentences) {
+            Result splitResult = ToAnalysis.parse(sen);
+            boolean added = false;
+            for (Term term: splitResult.getTerms()) {
+                if (StringUtil.isBlank(term.getRealName())) {
+                    continue;
+                }
+                terms.add(term.getRealName());
+                added = true;
+            }
+            if (added) {
+                //record this is the end of one sentences
+            }
+        }
+
+        //use pipeline to do the decoref
+        String termText = StringUtil.join(terms, " ");
+        Annotation document = new Annotation(termText);
+        pipeline.annotate(document);
+
+        return document;
+    }
+
     private int getTermSentenceIndex(List<Integer> boundaryIndexes, int termIndex) {
         int ret = -1;
         for (int i = 0; i < boundaryIndexes.size(); i++) {
@@ -129,23 +118,76 @@ public class StanfordNLP {
         return ret;
     }
 
-    private Map<Integer, DecorefPosition> getDecorefMap(Annotation document, List<String> terms, List<Integer> boundaryIndexes) {
-        Map<Integer, DecorefPosition> refMap = new HashMap<Integer, DecorefPosition>();
 
-        //end index for annotated sentences
-        List<Integer> annoSentIdxes = new ArrayList<Integer>();
+    private List<String> getAnnotatedTokens(Annotation document) {
+        List<String> ret = new ArrayList<String>();
+        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
+        for (CoreLabel token: tokens) {
+            ret.add(token.value());
+        }
 
+        return ret;
+    }
+
+    private List<Integer> getAnnotatedSentenceBoudnary(Annotation document) {
+        List<Integer> ret = new ArrayList<Integer>();
         for (CoreMap m: document.get(CoreAnnotations.SentencesAnnotation.class)) {
-            System.out.println(m);
             List<CoreLabel> tokens = m.get(CoreAnnotations.TokensAnnotation.class);
-
-            if (annoSentIdxes.size() == 0) {
-                annoSentIdxes.add(tokens.size() - 1);
+            if (ret.size() == 0) {
+                ret.add(tokens.size() - 1);
             } else {
-                int prev = annoSentIdxes.get(annoSentIdxes.size() - 1);
-                annoSentIdxes.add(prev + tokens.size());
+                int prev = ret.get(ret.size() - 1);
+                ret.add(prev + tokens.size());
             }
         }
+        return ret;
+    }
+
+    private List<String> getDecorefDocumentSentences(Annotation document) {
+        List<String> tokens = getAnnotatedTokens(document);
+        //the sentence boundary indexes ends with 。？！
+        List<Integer> boundaryIndexes = TextParser.getSentenceBoundaryIndexForTerms(tokens);
+
+        Map<Integer, DecorefPosition> decorefMap = getDecorefMap(document, boundaryIndexes);
+
+        List<String> retSentences = new ArrayList<String>();
+
+        String oneSentence = "";
+
+        for (int i = 0; i < tokens.size();) {
+
+            String term = tokens.get(i);
+
+            int stride = 1;
+
+            if (decorefMap.containsKey(i)) {
+                //use decoref string
+                DecorefPosition pos = decorefMap.get(i);
+                oneSentence += pos.getRefString();
+                stride = pos.getEndIdx() - pos.getStartIdx();
+            } else {
+                //use original term
+                oneSentence += term;
+            }
+            if (boundaryIndexes.indexOf(i) != -1) {
+                //this is the end of sentences
+                retSentences.add(oneSentence);
+                oneSentence = "";
+            }
+
+            i += stride;
+        }
+
+        return retSentences;
+    }
+
+    private Map<Integer, DecorefPosition> getDecorefMap(Annotation document, List<Integer> boundaryIndexes) {
+        Map<Integer, DecorefPosition> refMap = new HashMap<Integer, DecorefPosition>();
+
+        List<String> tokens = getAnnotatedTokens(document);
+
+        //end index for annotated sentences
+        List<Integer> annoSentIdxes = getAnnotatedSentenceBoudnary(document);
 
         for (CorefChain cc: document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values()) {
             List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
@@ -169,7 +211,7 @@ public class StanfordNLP {
                 continue;
             }
 
-            String[] parts = cc.getRepresentativeMention().mentionSpan.split(" ");
+            String[] parts = mentions.get(0).mentionSpan.split(" ");
             String ref = StringUtil.join(Arrays.asList(parts), "");
             int startOffset = 0;
             if (mentions.get(0).sentNum != 1) {
@@ -217,7 +259,6 @@ public class StanfordNLP {
                 }
             }
 
-
             for (DecorefPosition p: decorefPositions) {
                 refMap.put(p.getStartIdx(), p);
             }
@@ -232,8 +273,16 @@ public class StanfordNLP {
         LexicalizedParser lp = LexicalizedParser.loadModel(modelPath);
         Tree t = lp.parse(text);
 
-        t.pennPrint();
+//        t.pennPrint();
+        ChineseGrammaticalStructure gs = new ChineseGrammaticalStructure(t);
+        Collection<TypedDependency> tdl = gs.typedDependenciesCollapsed();
+        for (int i = 0; i < tdl.size(); i++) {
+            TypedDependency td = (TypedDependency)tdl.toArray()[i];
+            System.out.println(td.dep().toString());
+        }
     }
+
+
 
     static private void selfTest() {
         String paragraph = "赵建军透露，去年以来教育部和国务院有关部门，主要是银监会、公安部、网信办、工商总局几个部门联合出台了很多措施、很多文件来治理校园贷的问题。尤其是今年初，上半年教育部和银监会、人力资源部联合印发了规范校园贷管理的文件，这个文件明确取缔校园贷款这个业务，任何网络贷款机构都不允许向在校大学生发放贷款。";
@@ -244,6 +293,9 @@ public class StanfordNLP {
                 "2016年3月27日晚，四川师范大学舞蹈学院大一新生芦某某在宿舍学习室内被室友滕某连砍50多刀后身亡。\n" +
                 "次日凌晨，犯罪嫌疑人滕某在现场被警方抓获。\n" +
                 "案件发生后，成都市公安局龙泉驿区分局邀请四川华西法医学鉴定中心对嫌疑人滕某进行了法医精神病学鉴定，鉴定意见是“滕某患有抑郁症，对3月27日的违法行为评定为部分刑事责任能力”。";
+        paragraph = "我说:Joe先来，他把事情和不满与委屈讲了一遍。\n" +
+                "我：妈妈解释给你听，我看到的你 ，你的表情跟你的表达方式，其实你已经对这件事情下的结论，我感受到的只是你的抱怨，跟你觉得自己很委屈，但我必须跟你说：你要反转你的观念，如果你今天跑来跟妈妈表达说: 妈妈..为什么妹妹老是爱告状？妈妈会一起跟你讨论这个问题，而且我会回答你有很多的小朋友可能都是如此，包括你的妹妹！我笑笑的跟他说～想想你们班上的同学没有发生过这样的问题？";
+        paragraph = "9月5日，曹格妻子吴速玲在微博上发布长文，称儿子和女儿因为小事吵了起来，并双双跑来告状。她用自己的EQ帮助两个孩子化解了矛盾，并告诉他们，必须学会沟通，而不是什么事情都先为自己下结论，既然下了不好的结论，结果就一定会是不好的，一样要反转你的脑袋！";
 
         TextParser parser  = new TextParser();
 
@@ -253,7 +305,7 @@ public class StanfordNLP {
             System.out.println(sentence);
         }
 
-//        nlp.dependencyParing("为此，他放弃了对组织架构的调整、对人员的定岗，而是将所有希望变革的高德人抽调出来，集中在一个项目组里，他需要在国庆来临前的两个半月内实现一次大的版本迭代。");
+//        nlp.dependencyParing(paragraph);
     }
 
     static private void test() {
@@ -261,7 +313,7 @@ public class StanfordNLP {
         long startTime=System.currentTimeMillis();
         String text = "小明 吃 了 个 冰棒 ，它 很 甜 。";
 
-        String[] args = new String[] {"-props", "edu/stanford/nlp/coref/properties/neural-chinese.properties" };
+        String[] args = new String[] {"-props", "edu/stanford/nlp/coref/properties/deterministic-chinese.properties" };
 
         Annotation document = new Annotation(text);
         Properties props = StringUtils.argsToProperties(args);

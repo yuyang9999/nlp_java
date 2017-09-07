@@ -22,6 +22,7 @@ public class TextParser {
     static private Set<Character> punctuations;
     static private Set<Character> splitPuncs;
     static private StopRecognition stopFilter;
+    static private Set<String> splitPuncStrs;
 
     static {
         stopFilter = new StopRecognition();
@@ -55,6 +56,11 @@ public class TextParser {
         splitPuncs.add('。');
         splitPuncs.add('！');
         splitPuncs.add('？');
+
+        splitPuncStrs = new HashSet<String>();
+        splitPuncStrs.add("。");
+        splitPuncStrs.add("！");
+        splitPuncStrs.add("？");
     }
 
     /***
@@ -215,5 +221,40 @@ public class TextParser {
             }
         }
         return sentences;
+    }
+
+
+    static public List<Integer> getSentenceBoundaryIndexForTerms(List<String> terms) {
+        List<Integer> ret = new ArrayList<Integer>();
+
+        for (int i = 0; i < terms.size(); i++) {
+            String term = terms.get(i);
+            if (splitPuncStrs.contains(term)) {
+                //check if next word is "
+                if (i < terms.size() - 1 && "\"".equals(terms.get(i+1))) {
+                    ret.add(i+1);
+                    i += 1;
+                } else {
+                    ret.add(i);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    static public String mergeAllTermsWithoutPunctions(String[] terms) {
+        String ret = "";
+        for (String term: terms) {
+            if (term.length() != 1) {
+                ret += term;
+            } else {
+                if (!punctuations.contains(term.charAt(0))) {
+                    ret += term;
+                }
+            }
+        }
+
+        return ret;
     }
 }
