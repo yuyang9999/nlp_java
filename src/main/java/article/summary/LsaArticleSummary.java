@@ -19,7 +19,7 @@ public class LsaArticleSummary implements ArticleSummary {
     static private final float smooth = 0.4f;
     static private final int min_dimensions = 3;
 
-    @Override
+
     public String[] getKeySentence(String title, String article, int topCnt) {
         Map<String, Integer> dictionary = createDictionary(article);
 
@@ -30,7 +30,7 @@ public class LsaArticleSummary implements ArticleSummary {
         return getTopRankSentence(sentences, sentenceRankIndex, topCnt);
     }
 
-    @Override
+
     public String[] getKeySentence(String url, int topCnt) {
         HtmlFetcher fetcher = new HtmlFetcher();
         JResult res = null;
@@ -175,7 +175,6 @@ public class LsaArticleSummary implements ArticleSummary {
         }
 
         Collections.sort(rankList, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Double d1 = (Double)o1.get("rank");
                 Double d2 = (Double)o2.get("rank");

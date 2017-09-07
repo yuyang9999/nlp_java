@@ -25,7 +25,6 @@ public class WeightedArticleSummary implements ArticleSummary {
         textParser = new TextParser();
     }
 
-    @Override
     public String[] getKeySentence(String title, String article, int topCnt) {
         String[] sentences = textParser.splitSentences(article);
 
@@ -44,7 +43,7 @@ public class WeightedArticleSummary implements ArticleSummary {
         return topSentences;
     }
 
-    @Override
+
     public String[] getKeySentence(String url, int topCnt) {
         HtmlFetcher fetcher = new HtmlFetcher();
         JResult res = null;
@@ -87,7 +86,6 @@ public class WeightedArticleSummary implements ArticleSummary {
         List<Map<String, Object>> topN = filterSentProps.subList(0, Math.min(N, filterSentProps.size()));
 
         Collections.sort(topN, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Integer idx1 = (Integer)o1.get(sentKeyOrder);
                 Integer idx2 = (Integer)o2.get(sentKeyOrder);
@@ -147,7 +145,6 @@ public class WeightedArticleSummary implements ArticleSummary {
 
         //sort the sentences according to the sentence score
         Collections.sort(ret, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Float score1 = (Float)o1.get(sentKeyTotalScore);
                 Float score2 = (Float)o2.get(sentKeyTotalScore);
