@@ -52,17 +52,22 @@ public class StanfordNLP {
 
         private int endIdx;
 
+        private int sentenceIdx;
+
         private String refString;
 
-        public DecorefPosition(int start, int end, String ref) {
+        public DecorefPosition(int start, int end, int sentIdx,  String ref) {
             startIdx = start;
             endIdx = end;
             refString = ref;
+            sentenceIdx = sentIdx;
         }
 
         public int getStartIdx() {return startIdx;}
 
         public int getEndIdx() {return endIdx;}
+
+        public int getSentenceIdx() {return sentenceIdx;}
 
         public String getRefString() {return refString;}
 
@@ -75,89 +80,47 @@ public class StanfordNLP {
         return document;
     }
 
-    private int getTermSentenceIndex(List<Integer> boundaryIndexes, int termIndex) {
-        int ret = -1;
-        for (int i = 0; i < boundaryIndexes.size(); i++) {
-            int idx = boundaryIndexes.get(i);
-            if (termIndex <= idx) {
-                ret = i;
-                break;
-            }
-        }
-
-        return ret;
-    }
-
-
-    private List<String> getAnnotatedTokens(Annotation document) {
-        List<String> ret = new ArrayList<String>();
-        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
-        for (CoreLabel token: tokens) {
-            ret.add(token.value());
-        }
-
-        return ret;
-    }
-
-    private List<Integer> getAnnotatedSentenceBoudnary(Annotation document) {
-        List<Integer> ret = new ArrayList<Integer>();
-        for (CoreMap m: document.get(CoreAnnotations.SentencesAnnotation.class)) {
-            List<CoreLabel> tokens = m.get(CoreAnnotations.TokensAnnotation.class);
-            if (ret.size() == 0) {
-                ret.add(tokens.size() - 1);
-            } else {
-                int prev = ret.get(ret.size() - 1);
-                ret.add(prev + tokens.size());
-            }
-        }
-        return ret;
-    }
 
     private List<String> getDecorefDocumentSentences(Annotation document) {
-        List<String> tokens = getAnnotatedTokens(document);
-        //the sentence boundary indexes ends with 。？！
-        List<Integer> boundaryIndexes = TextParser.getSentenceBoundaryIndexForTerms(tokens);
-
-        Map<Integer, DecorefPosition> decorefMap = getDecorefMap(document, boundaryIndexes);
-
         List<String> retSentences = new ArrayList<String>();
+        List<DecorefPosition> decorefPositions = getDecorefMap(document);
 
-        String oneSentence = "";
+        //get sentences
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
 
-        for (int i = 0; i < tokens.size();) {
+        for (int i = 0; i < sentences.size(); i++) {
+            CoreMap sentence = sentences.get(i);
+            String sentenceStr = "";
+            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+            for (int j = 0; j < tokens.size();) {
+                String token = tokens.get(j).value();
 
-            String term = tokens.get(i);
+                DecorefPosition decorefPosition = null;
+                for (DecorefPosition p: decorefPositions) {
+                    if (p.getSentenceIdx() == i && p.getStartIdx() == j) {
+                        decorefPosition = p;
+                        break;
+                    }
+                }
 
-            int stride = 1;
-
-            if (decorefMap.containsKey(i)) {
-                //use decoref string
-                DecorefPosition pos = decorefMap.get(i);
-                oneSentence += pos.getRefString();
-                stride = pos.getEndIdx() - pos.getStartIdx();
-            } else {
-                //use original term
-                oneSentence += term;
+                if (decorefPosition != null) {
+                    //replace
+                    sentenceStr += decorefPosition.getRefString();
+                    j += decorefPosition.getEndIdx() - decorefPosition.getStartIdx();
+                } else {
+                    sentenceStr += token;
+                    j += 1;
+                }
             }
-            if (boundaryIndexes.indexOf(i) != -1) {
-                //this is the end of sentences
-                retSentences.add(oneSentence);
-                oneSentence = "";
-            }
-
-            i += stride;
+            retSentences.add(sentenceStr);
         }
 
         return retSentences;
     }
 
-    private Map<Integer, DecorefPosition> getDecorefMap(Annotation document, List<Integer> boundaryIndexes) {
-        Map<Integer, DecorefPosition> refMap = new HashMap<Integer, DecorefPosition>();
+    private List<DecorefPosition> getDecorefMap(Annotation document) {
 
-        List<String> tokens = getAnnotatedTokens(document);
-
-        //end index for annotated sentences
-        List<Integer> annoSentIdxes = getAnnotatedSentenceBoudnary(document);
+        List<DecorefPosition> decorefPositions = new ArrayList<DecorefPosition>();
 
         for (CorefChain cc: document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values()) {
             List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
@@ -171,7 +134,7 @@ public class StanfordNLP {
             //check if all mentions is same
             boolean isSame = true;
             String firstStr = mentions.get(0).mentionSpan;
-            for (CorefChain.CorefMention m: mentions) {
+            for (CorefChain.CorefMention m : mentions) {
                 if (!m.mentionSpan.equals(firstStr)) {
                     isSame = false;
                 }
@@ -183,67 +146,18 @@ public class StanfordNLP {
 
             String[] parts = mentions.get(0).mentionSpan.split(" ");
             String ref = StringUtil.join(Arrays.asList(parts), "");
-            int startOffset = 0;
-            if (mentions.get(0).sentNum != 1) {
-                startOffset = annoSentIdxes.get(mentions.get(0).sentNum -2) +1;
-            }
+            int prevSentNum = mentions.get(0).sentNum;
 
-            List<Integer> startIndexes = new ArrayList<Integer>();
-            for (CorefChain.CorefMention m: mentions) {
-                //mention.startIndex starts with 1 for the array
-                int offset = 0;
-                if (m.sentNum > 1) {
-                    offset = annoSentIdxes.get(m.sentNum - 2) + 1;
-                }
-                startIndexes.add(m.startIndex-1 + offset);
-            }
-
-            List<Integer> sentenceIndexes = new ArrayList<Integer>();
-
-            for (CorefChain.CorefMention m: mentions) {
-                int offset = 0;
-                if (m.sentNum > 1) {
-                    offset = annoSentIdxes.get(m.sentNum - 2) + 1;
-                }
-                int sentIdx = getTermSentenceIndex(boundaryIndexes, m.startIndex - 1 + offset);
-                if (sentIdx == -1) {
-                    continue;
-                }
-
-                sentenceIndexes.add(sentIdx);
-            }
-
-            List<DecorefPosition> decorefPositions = new ArrayList<DecorefPosition>();
-
-            int prevSentenceIdxes = -1;
-
-            for (int i = 0; i < startIndexes.size(); i++) {
-
+            for (int i = 1; i < mentions.size(); i++) {
                 CorefChain.CorefMention m = mentions.get(i);
-
-                int offset = 0;
-                if (m.sentNum != 1) {
-                    offset = annoSentIdxes.get(m.sentNum - 2) + 1;
-                }
-
-                int sentIdx = sentenceIndexes.get(i);
-                if (sentIdx != prevSentenceIdxes) {
-                    //don't add first mention
-                    if (m.startIndex - 1 + offset!= mentions.get(0).startIndex-1 + startOffset) {
-
-                        decorefPositions.add(new DecorefPosition(m.startIndex-1 + offset, m.endIndex-1 + offset, ref));
-                    }
-                    prevSentenceIdxes = sentIdx;
-                }
+                if (m.sentNum == prevSentNum)
+                    continue;
+                prevSentNum = m.sentNum;
+                DecorefPosition p = new DecorefPosition(m.startIndex - 1, m.endIndex - 1, m.sentNum - 1, ref);
+                decorefPositions.add(p);
             }
-
-            for (DecorefPosition p: decorefPositions) {
-                refMap.put(p.getStartIdx(), p);
-            }
-
         }
-
-        return refMap;
+        return decorefPositions;
     }
 
     public void dependencyParing(String text) {
@@ -273,7 +187,7 @@ public class StanfordNLP {
                 "案件发生后，成都市公安局龙泉驿区分局邀请四川华西法医学鉴定中心对嫌疑人滕某进行了法医精神病学鉴定，鉴定意见是“滕某患有抑郁症，对3月27日的违法行为评定为部分刑事责任能力”。";
         paragraph = "我说:Joe先来，他把事情和不满与委屈讲了一遍。\n" +
                 "我：妈妈解释给你听，我看到的你 ，你的表情跟你的表达方式，其实你已经对这件事情下的结论，我感受到的只是你的抱怨，跟你觉得自己很委屈，但我必须跟你说：你要反转你的观念，如果你今天跑来跟妈妈表达说: 妈妈..为什么妹妹老是爱告状？妈妈会一起跟你讨论这个问题，而且我会回答你有很多的小朋友可能都是如此，包括你的妹妹！我笑笑的跟他说～想想你们班上的同学没有发生过这样的问题？";
-        paragraph = "9月5日，曹格妻子吴速玲在微博上发布长文，称儿子和女儿因为小事吵了起来，并双双跑来告状。她用自己的EQ帮助两个孩子化解了矛盾，并告诉他们，必须学会沟通，而不是什么事情都先为自己下结论，既然下了不好的结论，结果就一定会是不好的，一样要反转你的脑袋！";
+//        paragraph = "9月5日，曹格妻子吴速玲在微博上发布长文，称儿子和女儿因为小事吵了起来，并双双跑来告状。她用自己的EQ帮助两个孩子化解了矛盾，并告诉他们，必须学会沟通，而不是什么事情都先为自己下结论，既然下了不好的结论，结果就一定会是不好的，一样要反转你的脑袋！";
 
         System.out.println(paragraph);
         StanfordNLP nlp = new StanfordNLP(paragraph);
@@ -318,6 +232,8 @@ public class StanfordNLP {
 
     static private void testChinese() {
         String text = "EA在给特郎普总统的公开信上签名，并支持DACA政策和受这个政策保护的人们。EA在信中写道“追梦者们是我们公司和国家经济未来的活力所在。正是有了他们我们才有成长并创造就业机会。他们是我们成为世界竞争中获得优势的源泉。”EA呼吁特郎普总统和他的议会能为这些追梦者们提供更有效的永久合法化保护策略。参与签署这封公开信的还有很多美国IT业巨头，包括了谷歌和亚马逊。不过，在这封公开信中，EA和微软是仅有的两家游戏公司。";
+        text = "Kotaku向美国的几家本土和海外游戏发行商询问了他们的看法，以及这个政策会如何影响他们受DACA保护的那些雇员。索尼的一位发言人称：“我们的国际竞争力来自与给所有人创造机会，这其中包括今天的追梦者们能成为明日的发明者。联邦立法能维持DACA政策的话，能从经济和人性的角度提升美国的价值。”";
+        text = "很多DACA支持者和团体领袖指出，这个政策让很多从贫困地区出生的人获得了机会。比如YouTube的主播戴维·多比利克，出生在斯洛伐克的他童年时来到美国芝加哥，并在Vine网站上成名，该网站关闭之后泽转投YouTube继续他的播客事业。他在Twitter上发言“去年我为这个国家交了40万美元的税，得到的就是一张免费回斯洛伐克老家的机票。”许多YouTube上的播客主都加入了声援保护DACA的行列。";
         Annotation document = new Annotation(text);
 
         String[] args = new String[] {"-props", "/Users/yuyang/Desktop/work/nlppractice/src/main/java/article/summary/chinese.properties" };
