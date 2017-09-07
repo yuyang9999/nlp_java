@@ -1,7 +1,6 @@
 package article.summary;
 
 
-import com.sun.tools.javac.comp.Annotate;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.coref.data.Mention;
@@ -9,16 +8,12 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.ChineseSegmenterAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStructure;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
-import org.ansj.domain.Result;
-import org.ansj.domain.Term;
-import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
 
 import java.util.*;
@@ -27,30 +22,24 @@ import java.util.*;
  * Created by yuyang on 1/9/17.
  */
 public class StanfordNLP {
-    private String[] articleSentences;
+    private String article;
 
     static private StanfordCoreNLP pipeline;
 
     static {
         //initialize the pipeline
-        String[] args = new String[]{"-props", "edu/stanford/nlp/coref/properties/neural-chinese.properties"};
+        String[] args = new String[]{"-props", "/Users/yuyang/Desktop/work/nlppractice/src/main/java/article/summary/chinese.properties"};
         Properties props = StringUtils.argsToProperties(args);
         pipeline = new StanfordCoreNLP(props);
     }
 
-    public StanfordNLP(String[] sentences) {
-        System.out.println("original sentences");
-        for (String s: sentences) {
-            System.out.println(s);
-        }
-
-
-        this.articleSentences = sentences;
+    public StanfordNLP(String article) {
+        this.article = article;
     }
 
     public String[] decorefSentences() {
         //use ansj to do the cut the sentences
-        Annotation document = getAnnotationFromSentences(this.articleSentences);
+        Annotation document = getAnnotationFromSentences(this.article);
 
         //collected sentences
         List<String> retSentences = getDecorefDocumentSentences(document);
@@ -79,23 +68,8 @@ public class StanfordNLP {
 
     }
 
-    private Annotation getAnnotationFromSentences(String[] sentences) {
-        //use ansj to do the cut the sentences
-        List<String> terms = new ArrayList<String>();
-
-        for (String sen: articleSentences) {
-            Result splitResult = ToAnalysis.parse(sen);
-            for (Term term: splitResult.getTerms()) {
-                if (StringUtil.isBlank(term.getRealName())) {
-                    continue;
-                }
-                terms.add(term.getRealName());
-            }
-        }
-
-        //use pipeline to do the decoref
-        String termText = StringUtil.join(terms, " ");
-        Annotation document = new Annotation(termText);
+    private Annotation getAnnotationFromSentences(String article) {
+        Annotation document = new Annotation(article);
         pipeline.annotate(document);
 
         return document;
@@ -217,13 +191,21 @@ public class StanfordNLP {
             List<Integer> startIndexes = new ArrayList<Integer>();
             for (CorefChain.CorefMention m: mentions) {
                 //mention.startIndex starts with 1 for the array
-                startIndexes.add(m.startIndex-1);
+                int offset = 0;
+                if (m.sentNum > 1) {
+                    offset = annoSentIdxes.get(m.sentNum - 2) + 1;
+                }
+                startIndexes.add(m.startIndex-1 + offset);
             }
 
             List<Integer> sentenceIndexes = new ArrayList<Integer>();
 
             for (CorefChain.CorefMention m: mentions) {
-                int sentIdx = getTermSentenceIndex(boundaryIndexes, m.startIndex - 1);
+                int offset = 0;
+                if (m.sentNum > 1) {
+                    offset = annoSentIdxes.get(m.sentNum - 2) + 1;
+                }
+                int sentIdx = getTermSentenceIndex(boundaryIndexes, m.startIndex - 1 + offset);
                 if (sentIdx == -1) {
                     continue;
                 }
@@ -293,15 +275,14 @@ public class StanfordNLP {
                 "我：妈妈解释给你听，我看到的你 ，你的表情跟你的表达方式，其实你已经对这件事情下的结论，我感受到的只是你的抱怨，跟你觉得自己很委屈，但我必须跟你说：你要反转你的观念，如果你今天跑来跟妈妈表达说: 妈妈..为什么妹妹老是爱告状？妈妈会一起跟你讨论这个问题，而且我会回答你有很多的小朋友可能都是如此，包括你的妹妹！我笑笑的跟他说～想想你们班上的同学没有发生过这样的问题？";
         paragraph = "9月5日，曹格妻子吴速玲在微博上发布长文，称儿子和女儿因为小事吵了起来，并双双跑来告状。她用自己的EQ帮助两个孩子化解了矛盾，并告诉他们，必须学会沟通，而不是什么事情都先为自己下结论，既然下了不好的结论，结果就一定会是不好的，一样要反转你的脑袋！";
 
-        TextParser parser  = new TextParser();
+        System.out.println(paragraph);
+        StanfordNLP nlp = new StanfordNLP(paragraph);
+        String[] parsedSentences =  nlp.decorefSentences();
+        for (String sentence: parsedSentences) {
+            System.out.println(sentence);
+        }
 
-        StanfordNLP nlp = new StanfordNLP(parser.splitSentences(paragraph));
-//        String[] parsedSentences =  nlp.decorefSentences();
-//        for (String sentence: parsedSentences) {
-//            System.out.println(sentence);
-//        }
-
-        nlp.dependencyParing(paragraph);
+//        nlp.dependencyParing(paragraph);
     }
 
     static private void test() {
@@ -344,6 +325,10 @@ public class StanfordNLP {
 
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         pipeline.annotate(document);
+
+        for (CoreMap m: document.get(CoreAnnotations.SentencesAnnotation.class)) {
+            System.out.println(m);
+        }
 
         for (CorefChain cc : document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values()) {
             System.out.println("\t" + cc);
