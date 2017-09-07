@@ -9,6 +9,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.ChineseSegmenterAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -84,16 +85,11 @@ public class StanfordNLP {
 
         for (String sen: articleSentences) {
             Result splitResult = ToAnalysis.parse(sen);
-            boolean added = false;
             for (Term term: splitResult.getTerms()) {
                 if (StringUtil.isBlank(term.getRealName())) {
                     continue;
                 }
                 terms.add(term.getRealName());
-                added = true;
-            }
-            if (added) {
-                //record this is the end of one sentences
             }
         }
 
@@ -300,12 +296,12 @@ public class StanfordNLP {
         TextParser parser  = new TextParser();
 
         StanfordNLP nlp = new StanfordNLP(parser.splitSentences(paragraph));
-        String[] parsedSentences =  nlp.decorefSentences();
-        for (String sentence: parsedSentences) {
-            System.out.println(sentence);
-        }
+//        String[] parsedSentences =  nlp.decorefSentences();
+//        for (String sentence: parsedSentences) {
+//            System.out.println(sentence);
+//        }
 
-//        nlp.dependencyParing(paragraph);
+        nlp.dependencyParing(paragraph);
     }
 
     static private void test() {
@@ -313,7 +309,7 @@ public class StanfordNLP {
         long startTime=System.currentTimeMillis();
         String text = "小明 吃 了 个 冰棒 ，它 很 甜 。";
 
-        String[] args = new String[] {"-props", "edu/stanford/nlp/coref/properties/deterministic-chinese.properties" };
+        String[] args = new String[] {"-props", "edu/stanford/nlp/coref/properties/neural-chinese.properties" };
 
         Annotation document = new Annotation(text);
         Properties props = StringUtils.argsToProperties(args);
@@ -339,8 +335,24 @@ public class StanfordNLP {
         System.out.println("Running time "+time/60+"min "+time%60+"s");
     }
 
+    static private void testChinese() {
+        String text = "EA在给特郎普总统的公开信上签名，并支持DACA政策和受这个政策保护的人们。EA在信中写道“追梦者们是我们公司和国家经济未来的活力所在。正是有了他们我们才有成长并创造就业机会。他们是我们成为世界竞争中获得优势的源泉。”EA呼吁特郎普总统和他的议会能为这些追梦者们提供更有效的永久合法化保护策略。参与签署这封公开信的还有很多美国IT业巨头，包括了谷歌和亚马逊。不过，在这封公开信中，EA和微软是仅有的两家游戏公司。";
+        Annotation document = new Annotation(text);
+
+        String[] args = new String[] {"-props", "/Users/yuyang/Desktop/work/nlppractice/src/main/java/article/summary/chinese.properties" };
+        Properties props = StringUtils.argsToProperties(args);
+
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        pipeline.annotate(document);
+
+        for (CorefChain cc : document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values()) {
+            System.out.println("\t" + cc);
+        }
+    }
+
     public static void main(String[] args) throws Exception {
-        selfTest();
+//        selfTest();
 //        test();
+        testChinese();
     }
 }
