@@ -16,7 +16,6 @@ public class LuhuSummarizer implements ArticleSummary {
 
     static private final float significant_percentage = 1.0f;
 
-    @Override
     public String[] getKeySentence(String title, String article, int topCnt) {
         String[] sentences = textParser.splitSentences(article);
         String[] allWords = textParser.getArticleWords(article);
@@ -28,7 +27,6 @@ public class LuhuSummarizer implements ArticleSummary {
         return getBestSentences(sentences, best_words, topCnt);
     }
 
-    @Override
     public String[] getKeySentence(String url, int topCnt) {
         HtmlFetcher fetcher = new HtmlFetcher();
         JResult res = null;
@@ -79,7 +77,6 @@ public class LuhuSummarizer implements ArticleSummary {
 
         //sort the sentence list according to the rating
         Collections.sort(sentenceList, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Float rate1 = (Float)o1.get("rating");
                 Float rate2 = (Float)o2.get("rating");
@@ -90,7 +87,6 @@ public class LuhuSummarizer implements ArticleSummary {
         List<Map<String, Object>> topSentenceList = sentenceList.subList(0, Math.min(count, sentenceList.size()));
         //sort the top sentence list according to the sentence order in the article
         Collections.sort(topSentenceList, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Integer order1 = (Integer)o1.get("order");
                 Integer order2 = (Integer)o2.get("order");
@@ -114,7 +110,7 @@ public class LuhuSummarizer implements ArticleSummary {
         Set<String> bestWordSet = new HashSet<String>();
         bestWordSet.addAll(Arrays.asList(bestWords));
 
-        String[] sentenceWords = textParser.splitWords(sentence);
+        String[] sentenceWords = textParser.splitText(sentence);
 
         boolean inChunk = false;
 
@@ -196,7 +192,6 @@ class TfDocumentModel {
         }
 
         Collections.sort(sigWords, new Comparator<Map<String, Object>>() {
-            @Override
             public int compare(Map<String, Object> o1, Map<String, Object> o2) {
                 Integer i1 = (Integer)o1.get("count");
                 Integer i2 = (Integer)o2.get("count");

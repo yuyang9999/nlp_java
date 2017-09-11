@@ -108,7 +108,7 @@ public class TextParser {
      * @param text input text
      * @return words array
      */
-    public String[] splitWords(String text) {
+    public String[] splitText(String text) {
         if (text == null || "".equals(text)) {
             return new String[0];
         }
@@ -119,7 +119,7 @@ public class TextParser {
         for (Term term : splitResult.getTerms()) {
             String word = term.getRealName();
             if (!StringUtil.isBlank(word)) {
-                words.add(word.toLowerCase());
+                words.add(word.toLowerCase().trim());
             }
         }
 
@@ -140,6 +140,22 @@ public class TextParser {
         private int wordCnt;
     }
 
+    public String[] removePunctionsForWordsArray(String[] words) {
+        List<String> ret = new ArrayList<String>();
+        for (String w: words) {
+            if (w.length() == 1) {
+                if (punctuations.contains(w.charAt(0))) {
+                    continue;
+                }
+            }
+
+            ret.add(w);
+        }
+
+        return ret.toArray(new String[ret.size()]);
+    }
+
+
     /***
      * split text into words and order the words according to the frequencies
      * @param text input text
@@ -150,7 +166,8 @@ public class TextParser {
         String[] sentences = splitSentences(text);
         Map<String, Integer> wordDic = new HashMap<String, Integer>();
         for (String s : sentences) {
-            String[] words = splitWords(s);
+            String[] words = splitText(s);
+            words = removePunctionsForWordsArray(words);
             for (String w : words) {
                 wordCnt += 1;
                 if (!wordDic.containsKey(w)) {
@@ -191,7 +208,7 @@ public class TextParser {
         List<String> ret = new ArrayList<String>();
         String[] sentences = splitSentences(text);
         for (String sentence: sentences) {
-            for (String w: splitWords(sentence)) {
+            for (String w: splitText(sentence)) {
                 ret.add(w);
             }
         }
@@ -223,25 +240,6 @@ public class TextParser {
         return sentences;
     }
 
-
-    static public List<Integer> getSentenceBoundaryIndexForTerms(List<String> terms) {
-        List<Integer> ret = new ArrayList<Integer>();
-
-        for (int i = 0; i < terms.size(); i++) {
-            String term = terms.get(i);
-            if (splitPuncStrs.contains(term)) {
-                //check if next word is "
-                if (i < terms.size() - 1 && "\"".equals(terms.get(i+1))) {
-                    ret.add(i+1);
-                    i += 1;
-                } else {
-                    ret.add(i);
-                }
-            }
-        }
-
-        return ret;
-    }
 
     static public String mergeAllTermsWithoutPunctions(String[] terms) {
         String ret = "";

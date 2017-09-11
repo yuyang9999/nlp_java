@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * Created by yuyang on 1/9/17.
  */
-public class StanfordNLP {
+public class CorefResolution {
     private String article;
 
     static private StanfordCoreNLP pipeline;
@@ -33,16 +33,24 @@ public class StanfordNLP {
         pipeline = new StanfordCoreNLP(props);
     }
 
-    public StanfordNLP(String article) {
+    public CorefResolution(String article) {
         this.article = article;
     }
 
     public String[] decorefSentences() {
+
+        long startTime=System.currentTimeMillis();
+
         //use ansj to do the cut the sentences
         Annotation document = getAnnotationFromSentences(this.article);
 
         //collected sentences
         List<String> retSentences = getDecorefDocumentSentences(document);
+
+        long endTime=System.currentTimeMillis();
+
+        long time = (endTime-startTime)/1000;
+        System.out.println("decof Running time "+time/60+"min "+time%60+"s");
 
         return retSentences.toArray(new String[retSentences.size()]);
     }
@@ -144,6 +152,8 @@ public class StanfordNLP {
                 continue;
             }
 
+
+
             String[] parts = mentions.get(0).mentionSpan.split(" ");
             String ref = StringUtil.join(Arrays.asList(parts), "");
             int prevSentNum = mentions.get(0).sentNum;
@@ -190,7 +200,7 @@ public class StanfordNLP {
 //        paragraph = "9月5日，曹格妻子吴速玲在微博上发布长文，称儿子和女儿因为小事吵了起来，并双双跑来告状。她用自己的EQ帮助两个孩子化解了矛盾，并告诉他们，必须学会沟通，而不是什么事情都先为自己下结论，既然下了不好的结论，结果就一定会是不好的，一样要反转你的脑袋！";
 
         System.out.println(paragraph);
-        StanfordNLP nlp = new StanfordNLP(paragraph);
+        CorefResolution nlp = new CorefResolution(paragraph);
         String[] parsedSentences =  nlp.decorefSentences();
         for (String sentence: parsedSentences) {
             System.out.println(sentence);

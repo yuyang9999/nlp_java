@@ -92,7 +92,7 @@ public class LsaArticleSummary implements ArticleSummary {
         Matrix matrix = new Matrix(wordCnt, sentenceCnt, 0.0);
         for (int col = 0; col < sentenceCnt; col++) {
             String sentence = sentences[col];
-            String[] words = textParser.splitWords(sentence);
+            String[] words = textParser.splitText(sentence);
             for (String w: words) {
                 if (dictionary.containsKey(w)) {
                     Integer wordIdx = dictionary.get(w);

@@ -26,10 +26,17 @@ public class WeightedArticleSummary implements ArticleSummary {
     }
 
     public String[] getKeySentence(String title, String article, int topCnt) {
+        if ("".equals(article) || "".equals(title)) {
+            return new String[0];
+        }
+
+//        CorefResolution corefResolution = new CorefResolution(article);
+//        String[] sentences = corefResolution.decorefSentences();
+
         String[] sentences = textParser.splitSentences(article);
 
         String cleanTitle = textParser.removePunctations(title);
-        String[] titleWords = textParser.splitWords(cleanTitle);
+        String[] titleWords = textParser.splitText(cleanTitle);
         TextParser.KeyWords kws = textParser.getKeywords(article);
 
         List<Map<String, Object>> keywords = kws.getKeyWords();
@@ -119,8 +126,8 @@ public class WeightedArticleSummary implements ArticleSummary {
         List<Map<String, Object>> ret = new LinkedList<Map<String, Object>>();
         for (int i = 0; i < sentences.length; i++) {
             String origSentence = sentences[i];
-            String sentence = textParser.removePunctations(origSentence);
-            String[] words = textParser.splitWords(sentence);
+            String[] words = textParser.splitText(origSentence);
+            words = textParser.removePunctionsForWordsArray(words);
 
             float sbsScore = sbsFeature(words, keywords, topKWs);
             float dbsScore = dbsFeature(words, keywords, topKWs);
