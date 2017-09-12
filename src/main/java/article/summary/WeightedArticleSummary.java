@@ -32,6 +32,11 @@ public class WeightedArticleSummary implements ArticleSummary {
 
 //        CorefResolution corefResolution = new CorefResolution(article);
 //        String[] sentences = corefResolution.decorefSentences();
+//        System.out.println("begin print coref resolution");
+//        for (String s: sentences) {
+//            System.out.println(s);
+//        }
+//        System.out.println("end print coref resolution");
 
         String[] sentences = textParser.splitSentences(article);
 
