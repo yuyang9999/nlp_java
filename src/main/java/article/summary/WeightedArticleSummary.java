@@ -21,6 +21,10 @@ public class WeightedArticleSummary implements ArticleSummary {
     static private final String sentKeySentence = "sentence";
     static private final String sentKeyOrder = "order";
 
+    private String mArticle;
+    private String mTitle;
+    private String[] mSentences;
+
     public WeightedArticleSummary() {
         textParser = new TextParser();
     }
@@ -38,7 +42,12 @@ public class WeightedArticleSummary implements ArticleSummary {
 //        }
 //        System.out.println("end print coref resolution");
 
+        this.mArticle = article;
+        this.mTitle = title;
+
         String[] sentences = textParser.splitSentences(article);
+
+        this.mSentences = sentences;
 
         String cleanTitle = textParser.removePunctations(title);
         String[] titleWords = textParser.splitText(cleanTitle);
@@ -77,6 +86,18 @@ public class WeightedArticleSummary implements ArticleSummary {
         }
 
         return new String[0];
+    }
+
+    public String getArticle() {
+        return this.mArticle;
+    }
+
+    public String getTitle() {
+        return this.mTitle;
+    }
+
+    public String[] getSentences() {
+        return this.mSentences;
     }
 
     /***
