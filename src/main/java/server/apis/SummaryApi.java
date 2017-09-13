@@ -68,8 +68,6 @@ public class SummaryApi {
     }
 
 
-
-
     @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.POST})
     @RequestMapping(value = version + "test",
             method = RequestMethod.POST,
