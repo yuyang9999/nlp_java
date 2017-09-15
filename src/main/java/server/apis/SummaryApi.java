@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Data
-class InputURL {
+class SummaryInput {
     private String url;
     private int extractNum;
 }
@@ -73,7 +73,7 @@ public class SummaryApi {
             method = RequestMethod.POST,
             consumes = {"application/json"},
             produces = {"application/json"})
-    public SummaryResponse test(@RequestBody InputURL url) {
+    public SummaryResponse test(@RequestBody SummaryInput url) {
         WeightedArticleSummary summary = new WeightedArticleSummary();
         String[] topSentences = summary.getKeySentence(url.getUrl(), url.getExtractNum());
         return new SummaryResponse(summary.getTitle(), summary.getSentences(), url.getExtractNum(), topSentences);
