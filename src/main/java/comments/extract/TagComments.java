@@ -35,16 +35,19 @@ public class TagComments {
     private String tag;
     @Getter
     private List<String> comments;
+    @Getter
+    private String extractComment;
+
 
     public TagComments(String tag, List<String> comments) {
         this.tag = tag;
         this.comments = comments;
+        this.extractComment = extractComents();
     }
 
-    public String extractComents() {
+    private String extractComents() {
         List<String> commentsList = new ArrayList<String>();
 
-        //按照句子的长度过滤
         for (String s: this.comments) {
             if (shouldFilterSentence(s)) {
                 continue;
@@ -53,10 +56,21 @@ public class TagComments {
             commentsList.add(s);
         }
 
-        //todo: 过滤掉含有连接词的句子
+        //去除重复的
+        Set<String> commentSet = new HashSet<String>();
+        List<String> uniqueList = new ArrayList<String>();
+        for (String s: commentsList) {
+            if (commentSet.contains(s)) {
+                continue;
+            }
+
+            commentSet.add(s);
+            uniqueList.add(s);
+        }
+
 
         //按字符串长度并且按字符排序
-        Collections.sort(commentsList, new Comparator<String>() {
+        Collections.sort(uniqueList, new Comparator<String>() {
             public int compare(String o1, String o2) {
                 if (o1.length() != o2.length()) {
                     Integer i1 = o1.length();
@@ -68,11 +82,11 @@ public class TagComments {
         });
 
         //取中位数的句子
-        if (commentsList.size() == 0) {
+        if (uniqueList.size() == 0) {
             return "";
         }
 
-        return commentsList.get(commentsList.size() / 2);
+        return uniqueList.get(uniqueList.size() / 2);
     }
 
     @Override
@@ -107,13 +121,13 @@ public class TagComments {
         }
 
         //字数必须在规定的范围内
-        if (len < goodCommentMinSize && len > goodCommentMaxSize) {
+        if (len < goodCommentMinSize || len > goodCommentMaxSize) {
             return true;
         }
 
         //必须不含某些词
         for (String word: badWords) {
-            if (s.startsWith(word)) {
+            if (s.contains(word)) {
                 return true;
             }
         }

@@ -53,6 +53,10 @@ public class CommentsAbstractTest {
 
                 if (!StringUtil.isBlank(tagName) && commentsList.length > 0) {
                     TagComments tag = new TagComments(tagName, Arrays.asList(commentsList));
+                    //don't add tags where comments could not extract
+                    if (StringUtil.isBlank(tag.getExtractComment())) {
+                        continue;
+                    }
                     ret.add(tag);
                 }
             }

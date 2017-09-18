@@ -79,7 +79,7 @@ public class CommentsAbstract {
         //extract tag represent comment and concatenate them
         List<String> comments = new ArrayList<String>();
         for (TagComments tag: filterTags2) {
-            String comm = tag.extractComents();
+            String comm = tag.getExtractComment();
             if (!StringUtil.isBlank(comm)) {
                 comments.add(comm);
             }
