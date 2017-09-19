@@ -7,6 +7,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -22,10 +24,11 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.*;
 import org.springframework.security.oauth2.provider.token.store.*;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 import org.springframework.web.cors.*;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.servlet.ServletException;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -175,3 +178,68 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return bean;
     }
 }
+
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+class SimpleCorsFilter implements Filter {
+
+    public SimpleCorsFilter() {
+    }
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        HttpServletResponse response = (HttpServletResponse) res;
+        HttpServletRequest request = (HttpServletRequest) req;
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setHeader("Access-Control-Allow-Headers", "x-requested-with, authorization, cache-control");
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            chain.doFilter(req, res);
+        }
+    }
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+    }
+
+    @Override
+    public void destroy() {
+    }
+}
+
+
+/*
+the js code
+class Security {
+    static oauthTest(cb) {
+        const body = {
+            grant_type: "password",
+            username: "user1",
+            password: "password",
+        };
+
+        const encoded = btoa("client1:password");
+        fetch("http://localhost:8080/oauth/token", {
+            method: "post",
+            headers: {
+                Authorization: "Basic " + encoded,
+                "Content-type": "application/x-www-form-urlencoded; charset=utf-8",
+                "cache-control": "no-cache"
+            },
+            body: "grant_type=password&username=user1&password=password",
+        }).then((resp)=> {
+            if (resp.ok) {
+                return resp.json();
+            }
+        }).then((jsonResp)=> {
+            console.log(jsonResp);
+        }).catch((e)=> {
+            console.log(e);
+        });
+    }
+}
+ */
