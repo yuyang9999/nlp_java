@@ -44,7 +44,7 @@ public class CommentsAbstract {
         List<TagComments> filterTags = new ArrayList<TagComments>();
 
         for (TagComments t: this.tags) {
-            if (tagIndex.containsKey(t.getTag())) {
+            if (tagIndex.containsKey(t.getTag()) && !StringUtil.isBlank(t.getExtractComment())) {
                 filterTags.add(t);
             }
         }
@@ -70,7 +70,6 @@ public class CommentsAbstract {
                 return idx1.compareTo(idx2);
             }
         });
-
 
         //print the filterTags2 as debug info
         System.out.println("output tags");

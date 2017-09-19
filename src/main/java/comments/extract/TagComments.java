@@ -2,9 +2,11 @@ package comments.extract;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j;
+import org.jsoup.helper.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by yuyang on 18/9/17.
@@ -16,6 +18,8 @@ public class TagComments {
 
     static private Set<String> badWords;
 
+    private static final String debugFile = "/Users/yuyang/Desktop/temp/comment_extract.txt";
+
     static {
         badWords = new HashSet<String>();
         InputStream is = TagComments.class.getResourceAsStream("/bad_words.txt");
@@ -23,6 +27,9 @@ public class TagComments {
         String line;
         try {
             while ((line = br.readLine()) != null) {
+                if (StringUtil.isBlank(line) || line.startsWith("#")) {
+                    continue;
+                }
                 badWords.add(line);
             }
         } catch (IOException e) {
@@ -81,12 +88,16 @@ public class TagComments {
             }
         });
 
-        //取中位数的句子
+        //write to the debug file
+//        writeFilterCommentsToDebugFile(uniqueList);
+
         if (uniqueList.size() == 0) {
             return "";
         }
 
-        return uniqueList.get(uniqueList.size() / 2);
+        //随机取一个 （debug only)
+        int idx = ThreadLocalRandom.current().nextInt(0, uniqueList.size());
+        return uniqueList.get(idx);
     }
 
     @Override
@@ -94,6 +105,22 @@ public class TagComments {
         return tag;
     }
 
+    private void writeFilterCommentsToDebugFile(List<String> comments) {
+        try {
+            FileWriter fw = new FileWriter(debugFile, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+
+            for (String comment: comments) {
+                out.println(comment);
+            }
+
+            out.close();
+
+        } catch (IOException e) {
+            log.error(e);
+        }
+    }
 
     private int getChineseCharacterCount(String s) {
         int ret = 0;
