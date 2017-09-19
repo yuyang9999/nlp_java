@@ -44,6 +44,9 @@ public class TagComments {
     private List<String> comments;
     @Getter
     private String extractComment;
+    @Getter
+    private List<String> filteredComments;
+
 
 
     public TagComments(String tag, List<String> comments) {
@@ -87,6 +90,8 @@ public class TagComments {
                 return o1.compareTo(o2);
             }
         });
+
+        this.filteredComments = uniqueList;
 
         //write to the debug file
 //        writeFilterCommentsToDebugFile(uniqueList);

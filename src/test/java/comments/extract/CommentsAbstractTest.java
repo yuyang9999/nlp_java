@@ -1,6 +1,7 @@
 package comments.extract;
 
 import lombok.extern.log4j.Log4j;
+import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
 import org.junit.Test;
 
@@ -11,8 +12,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by yuyang on 18/9/17.
@@ -28,7 +27,7 @@ public class CommentsAbstractTest {
             BufferedReader br = new BufferedReader(fr);
             String line;
             while ((line = br.readLine()) != null) {
-                rowNum ++;
+                rowNum++;
                 if (rowNum == 1) {
                     //skip the first row
                     continue;
@@ -46,7 +45,7 @@ public class CommentsAbstractTest {
                 //get comments
                 String comments = parts[1];
                 if (comments.length() > 4) {
-                    comments = comments.substring(2, comments.length()-4);
+                    comments = comments.substring(2, comments.length() - 4);
                 }
 
                 String[] commentsList = comments.split("\",\"");
@@ -104,6 +103,12 @@ public class CommentsAbstractTest {
 
         //新堂洞韩国年糕火锅(金钟路店) 8062978
         System.out.println(getAbstract("/Users/yuyang/Downloads/87d0b226515041eeb66c070a5574671f.csv"));
+    }
+
+    @Test
+    public void testAnsj() {
+        String text = "三杯鸡鲜嫩多汁";
+        System.out.println(ToAnalysis.parse(text));
     }
 
 }
