@@ -107,7 +107,7 @@ public class CommentsAbstractTest {
 
     @Test
     public void testAnsj() {
-        String text = "三杯鸡鲜嫩多汁";
+        String text = "海鲜饭感觉还不错";
         System.out.println(ToAnalysis.parse(text));
     }
 
