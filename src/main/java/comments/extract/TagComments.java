@@ -39,7 +39,7 @@ public class TagComments {
     }
 
     @Getter
-    private String tag;
+    private String tagName;
     @Getter
     private List<String> comments;
     @Getter
@@ -49,8 +49,8 @@ public class TagComments {
 
 
 
-    public TagComments(String tag, List<String> comments) {
-        this.tag = tag;
+    public TagComments(String tagName, List<String> comments) {
+        this.tagName = tagName;
         this.comments = comments;
         this.extractComment = extractComents();
     }
@@ -107,7 +107,7 @@ public class TagComments {
 
     @Override
     public String toString() {
-        return tag;
+        return tagName;
     }
 
     private void writeFilterCommentsToDebugFile(List<String> comments) {
