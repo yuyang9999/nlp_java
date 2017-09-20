@@ -183,7 +183,15 @@ public class TagComments {
             return true;
         }
 
-        //不能以名词作为句子结尾
+        //动词或者连接词开头的句子也过滤掉
+        if (tokenNatures.size() > 0) {
+            String startNature = tokenNatures.get(0);
+            if (startNature.startsWith("v") || startNature.startsWith("c")) {
+                return true;
+            }
+        }
+
+        //不能所有的名词都在末尾
         if (tokenNatures.get(tokenNatures.size() - 1).startsWith("n")) {
             //检查之前有没有名词，如果末尾有好几个名词算一个
             boolean hasNoun = false;
@@ -216,7 +224,5 @@ public class TagComments {
 
         return false;
     }
-
-
 
 }

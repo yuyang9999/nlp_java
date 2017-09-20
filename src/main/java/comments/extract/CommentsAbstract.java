@@ -15,6 +15,7 @@ import java.util.*;
 @Log4j
 public class CommentsAbstract {
     static private Map<String, Integer> tagIndex;
+    //根据配置文件可以让某些tag提取1条以上的评论
     static private Map<String, Integer> tagExtractCnt;
 
     static {
@@ -96,7 +97,7 @@ public class CommentsAbstract {
 
         }
 
-        System.out.println("collected tags");
+        System.out.println("\n");
         System.out.println(collectedTags);
 
         String ret = "";

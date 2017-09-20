@@ -109,7 +109,10 @@ public class CommentsAbstractTest {
 
     @Test
     public void testAnsj() {
-        String text = "可以裹了嫩肉粉";
+        String text = "是酸辣甜口味好吃";
+        text = "使得口感更鲜美";
+        text = "因为太好吃太划算了";
+        text = "又是一家比较合我口味且性价比很高的店";
         Result cutResult = ToAnalysis.parse(text);
         System.out.println(cutResult);
 
