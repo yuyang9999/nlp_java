@@ -1,6 +1,8 @@
 package comments.extract;
 
 import lombok.extern.log4j.Log4j;
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
 import org.junit.Test;
@@ -107,8 +109,13 @@ public class CommentsAbstractTest {
 
     @Test
     public void testAnsj() {
-        String text = "海鲜饭感觉还不错";
-        System.out.println(ToAnalysis.parse(text));
+        String text = "可以裹了嫩肉粉";
+        Result cutResult = ToAnalysis.parse(text);
+        System.out.println(cutResult);
+
+        for (Term t: cutResult.getTerms()) {
+            System.out.println(t.getNatureStr());
+        }
     }
 
 }

@@ -2,6 +2,9 @@ package comments.extract;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j;
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
+import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
 
 import java.io.*;
@@ -127,7 +130,7 @@ public class TagComments {
         }
     }
 
-    private int getChineseCharacterCount(String s) {
+    private static int getChineseCharacterCount(String s) {
         int ret = 0;
         for (int i = 0; i < s.length();) {
             int codePoint = s.codePointAt(i);
@@ -144,7 +147,7 @@ public class TagComments {
      * @param s the sentence
      * @return true if required, false otherwise
      */
-    private boolean shouldFilterSentence(String s) {
+    private static boolean shouldFilterSentence(String s) {
         int len = getChineseCharacterCount(s);
 
         //必须全都是汉字
@@ -164,7 +167,56 @@ public class TagComments {
             }
         }
 
+        //必须有形容词
+        Result tokenize = ToAnalysis.parse(s);
+        boolean hasAdj = false;
+
+        List<String> tokenNatures = new ArrayList<String>();
+        for (Term t: tokenize.getTerms()) {
+            tokenNatures.add(t.getNatureStr());
+
+            if (t.getNatureStr().startsWith("a")) {
+                hasAdj = true;
+            }
+        }
+        if (!hasAdj) {
+            return true;
+        }
+
+        //不能以名词作为句子结尾
+        if (tokenNatures.get(tokenNatures.size() - 1).startsWith("n")) {
+            //检查之前有没有名词，如果末尾有好几个名词算一个
+            boolean hasNoun = false;
+
+            int lastNonNounIdx = -1;
+            for (int i = tokenNatures.size() - 2; i >= 0; i--) {
+                String nature = tokenNatures.get(i);
+                if (!nature.startsWith("n")) {
+                    lastNonNounIdx = i;
+                    break;
+                }
+            }
+
+            if (lastNonNounIdx == -1) {
+                //全都是名词？
+                return true;
+            }
+
+            for (int i = 0; i < lastNonNounIdx; i++) {
+                String nature = tokenNatures.get(i);
+                if (nature.startsWith("n")) {
+                    hasNoun = true;
+                    break;
+                }
+            }
+            if (!hasNoun) {
+                return true;
+            }
+        }
+
         return false;
     }
+
+
 
 }

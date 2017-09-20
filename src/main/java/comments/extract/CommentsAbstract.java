@@ -82,10 +82,6 @@ public class CommentsAbstract {
             }
         });
 
-//        //print the filterTags2 as debug info
-//        System.out.println("output tags");
-//        System.out.println(filterTags2);
-
         //extract tag represent comment and concatenate them
         List<String> comments = new ArrayList<String>();
         List<String> collectedTags = new ArrayList<String>();
@@ -93,17 +89,11 @@ public class CommentsAbstract {
 
         for (TagComments tag: filterTags2) {
             List<String> extractComments = getTagExtractComments(tag, importWords);
-
             if (extractComments.size() != 0) {
                 comments.addAll(extractComments);
                 collectedTags.add(tag.getTagName());
             }
 
-
-//            String comm = tag.getExtractComment();
-//            if (!StringUtil.isBlank(comm)) {
-//                comments.add(comm);
-//            }
         }
 
         System.out.println("collected tags");
@@ -119,7 +109,7 @@ public class CommentsAbstract {
     }
 
     private List<String> getTagExtractComments(TagComments tag,  Map<String, Integer> importWords) {
-        //名词跟形容词各出现一次
+        //名词跟形容词必须只出现一次
         List<String> ret = new ArrayList<String>();
 
         int extractNum = tagExtractCnt.get(tag.getTagName());
@@ -150,8 +140,6 @@ public class CommentsAbstract {
                     }
                 }
             }
-
-
 
             if (shouldSkip) {
                 continue;
