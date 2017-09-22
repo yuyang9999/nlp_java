@@ -113,6 +113,11 @@ public class CommentsAbstractTest {
         text = "使得口感更鲜美";
         text = "因为太好吃太划算了";
         text = "又是一家比较合我口味且性价比很高的店";
+        text = "一种惊艳的味道";
+        text = "还推出了好像叫鲍鱼香辣虾锅的";
+        text = "三文鱼";
+        text = "三个菜都很好吃";
+        text = "十多前上学时候这里菜品好";
         Result cutResult = ToAnalysis.parse(text);
         System.out.println(cutResult);
 
