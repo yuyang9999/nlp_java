@@ -118,6 +118,7 @@ public class CommentsAbstractTest {
         text = "三文鱼";
         text = "三个菜都很好吃";
         text = "十多前上学时候这里菜品好";
+        text = "价格实惠的份上";
         Result cutResult = ToAnalysis.parse(text);
         System.out.println(cutResult);
 
