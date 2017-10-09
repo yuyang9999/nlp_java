@@ -1,10 +1,12 @@
 package comments.extract;
 
+
 import lombok.extern.log4j.Log4j;
 import org.ansj.domain.Result;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
+import org.omg.IOP.TAG_MULTIPLE_COMPONENTS;
 
 import java.io.*;
 import java.util.*;
@@ -29,6 +31,11 @@ public class CommentsAbstract {
         String line;
         try {
             while ((line = br.readLine()) != null) {
+                if (line.startsWith("#")) {
+                    //skip the comment
+                    continue;
+                }
+
                 int extractNum = 1;
                 String[] parts = line.split(":");
                 if (parts.length == 2) {
@@ -64,14 +71,43 @@ public class CommentsAbstract {
         //only use one tag among tags with same index (similar meanings)
         List<TagComments> filterTags2 = new ArrayList<TagComments>();
         Set<Integer> collectTagIdxes = new HashSet<Integer>();
+        Map<Integer, Set> existingTags = new HashMap<Integer, Set>();
+
         for (TagComments tag: filterTags) {
             Integer idx = tagIndex.get(tag.getTagName());
-            if (collectTagIdxes.contains(idx)) {
-                continue;
-            }
+//            if (collectTagIdxes.contains(idx)) {
+//                continue;
+//            }
 
-            collectTagIdxes.add(idx);
-            filterTags2.add(tag);
+//            collectTagIdxes.add(idx);
+//            filterTags2.add(tag);
+
+            if (!existingTags.containsKey(idx)) {
+                existingTags.put(idx, new HashSet<TagComments>());
+            }
+            existingTags.get(idx).add(tag);
+        }
+
+        //把每个index 中选择一个tagComment，选中的tagComment 必须是在同一类中抽取评论最多的
+        for (Map.Entry<Integer, Set>entry: existingTags.entrySet()) {
+            Set<TagComments> tagSet = entry.getValue();
+            if (tagSet.size() == 1) {
+                TagComments tag = tagSet.iterator().next();
+                filterTags2.add(tag);
+                continue;
+            } else {
+                List<TagComments> tagArr = Arrays.asList(tagSet.toArray(new TagComments[tagSet.size()]));
+                //sort the tags according to the extract comment number
+                Collections.sort(tagArr, new Comparator<TagComments>() {
+                    @Override
+                    public int compare(TagComments o1, TagComments o2) {
+                        Integer cnt1 = o1.getFilteredComments().size();
+                        Integer cnt2 = o2.getFilteredComments().size();
+                        return -cnt1.compareTo(cnt2);
+                    }
+                });
+                filterTags2.add(tagArr.get(0));
+            }
         }
 
         //sort the tags according to the tag index
