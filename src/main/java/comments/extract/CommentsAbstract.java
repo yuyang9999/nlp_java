@@ -158,6 +158,7 @@ public class CommentsAbstract {
 
             List<String> collectWords = new ArrayList<String>();
             List<String> collectNatures = new ArrayList<String>();
+            /*
             boolean shouldSkip = false;
             //名词跟形容词不能出现多次
             for (Term t: cutResult.getTerms()) {
@@ -182,7 +183,8 @@ public class CommentsAbstract {
                 continue;
             }
 
-            ret.add(s);
+
+
             for (String word: collectWords) {
                 if (!importWords.containsKey(word)) {
                     importWords.put(word, 0);
@@ -190,7 +192,9 @@ public class CommentsAbstract {
 
                 importWords.put(word, importWords.get(word) + 1);
             }
+            */
 
+            ret.add(s);
             if (ret.size() == extractNum) {
                 break;
             }
