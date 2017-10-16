@@ -123,12 +123,23 @@ public class CommentsAbstract {
         List<String> comments = new ArrayList<String>();
         List<String> collectedTags = new ArrayList<String>();
         Map<String, Integer> importWords = new HashMap<String, Integer>();
+        Set<String> commentsSet = new HashSet<String>();
 
         for (TagComments tag: filterTags2) {
             List<String> extractComments = getTagExtractComments(tag, importWords);
             if (extractComments.size() != 0) {
-                comments.addAll(extractComments);
-                collectedTags.add(tag.getTagName());
+                boolean added = false;
+                for (String s: extractComments) {
+                    //除去重复的句子
+                    if (commentsSet.contains(s)) {
+                        continue;
+                    }
+                    comments.add(s);
+                    added = true;
+                }
+                if (added) {
+                    collectedTags.add(tag.getTagName());
+                }
             }
 
         }
