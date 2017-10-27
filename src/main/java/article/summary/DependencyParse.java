@@ -1,11 +1,16 @@
 package article.summary;
 
+import com.hankcs.hanlp.HanLP;
+import com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLSentence;
+import com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLWord;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStructure;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by yuyang on 11/9/17.
@@ -26,12 +31,53 @@ public class DependencyParse {
 //        }
     }
 
+    static void hannlpDependParser(String text) {
+        CoNLLSentence sentence = HanLP.parseDependency(text);
 
-    public static void main(String[] args) {
-        String text = "他们服务质量很好";
-        dependencyParing(text);
+        CoNLLWord[] wordArray = sentence.getWordArray();
+
+        boolean hasZhuWei = false;
+        for (CoNLLWord w: wordArray) {
+            if ("主谓关系".equals(w.DEPREL) &&
+                    "核心关系".equals(w.HEAD.DEPREL)) {
+                hasZhuWei = true;
+            }
+        }
+        CoNLLWord lastWord = wordArray[wordArray.length - 1];
+        if ("核心关系".equals(lastWord.DEPREL) &&
+                "a".equals(lastWord.POSTAG) &&
+                hasZhuWei) {
+            System.out.println("this is a good sentence");
+        }
+
+//        for (CoNLLWord word: sentence) {
+//            System.out.println(word);
+//        }
+        System.out.println(sentence);
     }
 
+    private static String[] getComments() {
+        
+    }
+
+    public static void main(String[] args) {
+        String text = "下午茶随便点点";
+        text = "这里的菜很好吃";
+//        text = "今年的年会吃好";
+//        text = "阳光明媚的午后";
+//        text = "特别喜欢在晴朗凉爽的午后";
+//        text = "朋友一起聚会的好地方";
+//        text = "门口看着挺干净清爽的";
+//        text = "脆皮乳鸽很好吃";
+//        text = "人类终于耳聪目明了";
+//        text = "从爱因斯坦预言引力波到一百年后科学家接力发展高精度探测技术";
+//        text = "我们也看到中国科学家跻身在列";
+//        dependencyParing(text);
+        hannlpDependParser(text);
+
+
+
+    }
 
 
 }

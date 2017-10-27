@@ -1,5 +1,6 @@
 package comments.extract;
 
+import article.summary.DependencyParse;
 import lombok.extern.log4j.Log4j;
 import org.ansj.domain.Result;
 import org.ansj.domain.Term;
@@ -20,6 +21,13 @@ import java.util.List;
  */
 @Log4j
 public class CommentsAbstractTest {
+
+    /*
+    select tag, collect_list(subsen) from dpmid_xt_review_summary_tag_cluster_all
+    where hp_cal_dt='2017-09-12' and source='DIANPING' and tag_id > 0 and shop_id=8062978  and sentiment >= 0 group by tag_id, tag;
+     */
+
+
     private List<TagComments> getTagsFromFile(String path) {
         List<TagComments> ret = new ArrayList<TagComments>();
 
@@ -74,8 +82,15 @@ public class CommentsAbstractTest {
         return ca.extractAbstracts();
     }
 
+    private void extraTest() {
+        System.out.println(getAbstract("/Users/yuyang/Downloads/73c00c95c682402daccbbd2c6f82e091.csv"));
+    }
+
     @Test
     public void extractAbstracts() throws Exception {
+        extraTest();
+
+        /*
         //厨房乐章 22886099
         System.out.println(getAbstract("/Users/yuyang/Desktop/work/comment_data_mining/input/cfyz_positive_tags.csv"));
 
@@ -105,6 +120,7 @@ public class CommentsAbstractTest {
 
         //新堂洞韩国年糕火锅(金钟路店) 8062978
         System.out.println(getAbstract("/Users/yuyang/Downloads/87d0b226515041eeb66c070a5574671f.csv"));
+        */
     }
 
     @Test
@@ -119,12 +135,20 @@ public class CommentsAbstractTest {
         text = "三个菜都很好吃";
         text = "十多前上学时候这里菜品好";
         text = "价格实惠的份上";
+        text = "这种环境的地方即便味道再好";
+        text = "再将新鲜的鲈鱼片放在汤里";
+        text = "午市套餐很划算";
+        text = "最适合朋友聚餐了";
+        text = "下午茶随便点点";
+        text = "一个难得过来的朋友一起去吃饭";
         Result cutResult = ToAnalysis.parse(text);
         System.out.println(cutResult);
 
-        for (Term t: cutResult.getTerms()) {
-            System.out.println(t.getNatureStr());
-        }
+//        for (Term t: cutResult.getTerms()) {
+//            System.out.println(t.getNatureStr());
+//        }
+//        DependencyParse.dependencyParing(text);
+
     }
 
 }
