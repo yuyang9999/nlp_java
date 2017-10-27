@@ -57,27 +57,26 @@ public class DependencyParse {
     }
 
     private static String[] getComments() {
-        
+        return new String[0];
     }
+
+    
 
     public static void main(String[] args) {
         String text = "下午茶随便点点";
         text = "这里的菜很好吃";
-//        text = "今年的年会吃好";
-//        text = "阳光明媚的午后";
-//        text = "特别喜欢在晴朗凉爽的午后";
-//        text = "朋友一起聚会的好地方";
-//        text = "门口看着挺干净清爽的";
-//        text = "脆皮乳鸽很好吃";
-//        text = "人类终于耳聪目明了";
-//        text = "从爱因斯坦预言引力波到一百年后科学家接力发展高精度探测技术";
-//        text = "我们也看到中国科学家跻身在列";
+        text = "今年的年会吃好";
+        text = "阳光明媚的午后";
+        text = "特别喜欢在晴朗凉爽的午后";
+        text = "朋友一起聚会的好地方";
+        text = "门口看着挺干净清爽的";
+        text = "脆皮乳鸽很好吃";
+        text = "人类终于耳聪目明了";
+        text = "从爱因斯坦预言引力波到一百年后科学家接力发展高精度探测技术";
+        text = "我们也看到中国科学家跻身在列";
 //        dependencyParing(text);
+        text = "不过海鲜真的蛮诱人的扇贝肉很大一个";
+        text = "以后做西餐的时候";
         hannlpDependParser(text);
-
-
-
     }
-
-
 }
