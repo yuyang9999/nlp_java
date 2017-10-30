@@ -244,6 +244,7 @@ public class CorefResolution {
         String text = "EA在给特郎普总统的公开信上签名，并支持DACA政策和受这个政策保护的人们。EA在信中写道“追梦者们是我们公司和国家经济未来的活力所在。正是有了他们我们才有成长并创造就业机会。他们是我们成为世界竞争中获得优势的源泉。”EA呼吁特郎普总统和他的议会能为这些追梦者们提供更有效的永久合法化保护策略。参与签署这封公开信的还有很多美国IT业巨头，包括了谷歌和亚马逊。不过，在这封公开信中，EA和微软是仅有的两家游戏公司。";
         text = "Kotaku向美国的几家本土和海外游戏发行商询问了他们的看法，以及这个政策会如何影响他们受DACA保护的那些雇员。索尼的一位发言人称：“我们的国际竞争力来自与给所有人创造机会，这其中包括今天的追梦者们能成为明日的发明者。联邦立法能维持DACA政策的话，能从经济和人性的角度提升美国的价值。”";
         text = "很多DACA支持者和团体领袖指出，这个政策让很多从贫困地区出生的人获得了机会。比如YouTube的主播戴维·多比利克，出生在斯洛伐克的他童年时来到美国芝加哥，并在Vine网站上成名，该网站关闭之后泽转投YouTube继续他的播客事业。他在Twitter上发言“去年我为这个国家交了40万美元的税，得到的就是一张免费回斯洛伐克老家的机票。”许多YouTube上的播客主都加入了声援保护DACA的行列。";
+        text = "烤培根比较特色，印象最深，它是培根里包裹着黄瓜条胡萝卜条，肉汁裹清香，赞";
         Annotation document = new Annotation(text);
 
         String[] args = new String[] {"-props", "/Users/yuyang/Desktop/work/nlppractice/src/main/java/article/summary/chinese.properties" };

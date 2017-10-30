@@ -142,7 +142,7 @@ public class CommentsExtractor {
         return ret;
     }
 
-    private boolean isGoodSubSentence(String text) {
+    static public boolean isGoodSubSentence(String text) {
         CoNLLSentence sentence = HanLP.parseDependency(text);
 
         CoNLLWord[] wordArray = sentence.getWordArray();
