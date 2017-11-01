@@ -4,6 +4,7 @@ import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLSentence;
 import com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLWord;
 import lombok.Data;
+import org.jsoup.helper.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,13 +30,18 @@ public class ProcessComments {
         }
 
         private List<String> filterComments(List<String> comments) {
-            List<String> ret = new ArrayList<String>();
+            Set<String> phrases = new HashSet<String>();
+
             for (String s: comments) {
                 String phrase = extractPhrase(s);
-                if (phrase != null) {
-                    ret.add(phrase);
+                if (!StringUtil.isBlank(phrase)) {
+                    phrases.add(phrase);
                 }
             }
+
+            List<String> ret = new ArrayList<String>();
+            ret.addAll(phrases);
+
             return ret;
         }
     }
@@ -89,6 +95,7 @@ public class ProcessComments {
                     bw.write(s + "\n");
                 }
             }
+            bw.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,7 +106,7 @@ public class ProcessComments {
         String ret = "";
 
         CoNLLSentence sentence = HanLP.parseDependency(s);
-        System.out.println(sentence);
+//        System.out.println(sentence);
 
         List<CoNLLWord> words = Arrays.asList(sentence.getWordArray());
 
@@ -108,7 +115,7 @@ public class ProcessComments {
 
         for (int i = 0; i < words.size(); i++) {
             CoNLLWord w = words.get(i);
-            map.put(w.NAME, i);
+            map.put(w.LEMMA, i);
         }
 
         int idx = -1;
@@ -130,26 +137,37 @@ public class ProcessComments {
                 if (w.DEPREL == "主谓关系" &&
                         w.POSTAG.startsWith("n") &&
                         w.HEAD == fWord) {
-                    ret = w.NAME;
+                    ret = w.LEMMA;
                     break;
                 }
             }
         } else if ("动宾关系".equals(fWord.DEPREL)) {
             //主谓加动宾
             CoNLLWord head = fWord.HEAD;
+            CoNLLWord target = null;
             for (CoNLLWord w: words) {
                 if (w.HEAD == head &&
                         w.POSTAG.startsWith("n") &&
                         "主谓关系".equals(w.DEPREL)) {
-                    ret = w.NAME;
+                    target = w;
                     break;
                 }
             }
+            //如果是定中关系也加进来
+            if (target != null) {
+                for (CoNLLWord w: words) {
+                    if ("定中关系".equals(w.DEPREL) && w.HEAD == target && w.POSTAG.startsWith("n")) {
+                        ret += w.LEMMA;
+                    }
+                }
+                ret += target.LEMMA;
+            }
+
         } else if ("定中关系".equals(fWord.DEPREL)) {
             //把定中关系后面所有短语拼接
             ret = "";
             for (int i = idx+1; i < words.size(); i++) {
-                ret += words.get(i).NAME;
+                ret += words.get(i).LEMMA;
                 if (words.get(i) == fWord.HEAD) {
                     break;
                 }
@@ -162,7 +180,7 @@ public class ProcessComments {
                     if (w.HEAD == head &&
                             w.POSTAG.startsWith("n") &&
                             "动宾关系".equals(w.DEPREL)) {
-                        ret = w.NAME;
+                        ret = w.LEMMA;
                         break;
                     }
                 }
@@ -173,19 +191,19 @@ public class ProcessComments {
     }
 
     public static void main(String[] args) {
-        String text = "她认为这家店的焦糖香草更有特色";
-        text = "区壁画很有特色";
-        text = "他们的意大利面还是有特色在里面的";
-        text = "酱汁很有特色";
-        text = "还有特色牛丸";
-        text = "特色是吊的黄酒";
-
-        System.out.println(extractPhrase(text));
-
-//        String inputFile = "/Users/yuyang/Desktop/recommend_generation/short_recommends.txt";
-//        String dumpFile = "/Users/yuyang/Desktop/recommend_generation/good_recommends.txt";
+//        String text = "她认为这家店的焦糖香草更有特色";
+//        text = "区壁画很有特色";
+//        text = "他们的意大利面还是有特色在里面的";
+//        text = "酱汁很有特色";
+//        text = "还有特色牛丸";
+//        text = "特色是吊的黄酒";
 //
-//        ProcessComments p = new ProcessComments(inputFile);
-//        p.dumpResultToFile(dumpFile);
+//        System.out.println(extractPhrase(text));
+
+        String inputFile = "/Users/yuyang/Desktop/recommend_generation/short_recommends.txt";
+        String dumpFile = "/Users/yuyang/Desktop/recommend_generation/good_recommends.txt";
+
+        ProcessComments p = new ProcessComments(inputFile);
+        p.dumpResultToFile(dumpFile);
     }
 }
