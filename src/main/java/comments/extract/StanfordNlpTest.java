@@ -41,7 +41,7 @@ public class StanfordNlpTest {
     }
 
     static private String extractPhrase(String sentence, String keyword) {
-
+        return "";
     }
 
     static private void testDependencies(Collection<TypedDependency> dependencies, String keyWord) {
@@ -163,8 +163,8 @@ public class StanfordNlpTest {
     public static void main(String[] args) {
         String keyword = "特色";
         String text = "酱汁有特色";
-        text = "特色是吊的黄酒";
-//        text = "酱汁出众";
+//        text = "特色是吊的黄酒";
+        text = "酱汁出众";
         Result result = ToAnalysis.parse(text);
         System.out.println(result);
 
