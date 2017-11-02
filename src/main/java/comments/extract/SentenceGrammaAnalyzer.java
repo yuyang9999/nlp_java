@@ -3,7 +3,6 @@ package comments.extract;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -11,10 +10,9 @@ import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStruct
 import edu.stanford.nlp.util.Pair;
 import org.ansj.domain.Result;
 import org.ansj.domain.Term;
-import org.ansj.splitWord.analysis.ToAnalysis;
-import org.apache.xerces.impl.xpath.regex.RegularExpression;
-import org.jsoup.helper.StringUtil;
 import org.ansj.library.DicLibrary;
+import org.ansj.splitWord.analysis.ToAnalysis;
+import org.jsoup.helper.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -24,7 +22,7 @@ import java.util.regex.Pattern;
 /**
  * Created by yuyang on 1/11/17.
  */
-public class Utility {
+class Utility {
     static private final String grammars = "edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz";
     static private final LexicalizedParser lp = LexicalizedParser.loadModel(grammars);
 
@@ -90,18 +88,21 @@ public class Utility {
 }
 
 
-class SentenceDependencyAnalyzer {
+public class SentenceGrammaAnalyzer {
     static {
         DicLibrary.insert(DicLibrary.DEFAULT, "亮点", "n", 1000);
         DicLibrary.insert(DicLibrary.DEFAULT, "提拉米苏", "n", 1000);
+        DicLibrary.insert(DicLibrary.DEFAULT, "生煎", "n", 1000);
+        DicLibrary.insert(DicLibrary.DEFAULT, "小笼包", "n", 1000);
     }
 
 
     private String mSentence;
     private Collection<TypedDependency> mDependencies;
     private Map<Integer, Term> mTermIndexMap;
+    private boolean debug;
 
-    public SentenceDependencyAnalyzer(String s) {
+    public SentenceGrammaAnalyzer(String s, boolean debug) {
         assert(!StringUtil.isBlank(s));
 
         mSentence = s;
@@ -109,9 +110,12 @@ class SentenceDependencyAnalyzer {
         mDependencies = dependency.first();
         mTermIndexMap = dependency.second();
 
-//        System.out.println(mDependencies);
-//        System.out.println(mTermIndexMap);
+        this.debug = debug;
 
+        if (debug) {
+            System.out.println(mDependencies);
+            System.out.println(mTermIndexMap);
+        }
     }
 
     public boolean isSentenceGoodCandidate() {
@@ -145,6 +149,7 @@ class SentenceDependencyAnalyzer {
         return ret;
     }
 
+
     public String extractNERForKeyword(String keyword) {
         if (keyword == null || !mSentence.contains(keyword)) {
             return "";
@@ -165,7 +170,7 @@ class SentenceDependencyAnalyzer {
         if (rootDepends.contains(word) || root.index() == word.index()) {
             //关键词也依赖于root或就是root
             if (word.index() > root.index()) {
-                //找root后面的名词
+                //找root前面的名词
                 for (IndexedWord w: rootDepends) {
                     if (w.index() < root.index() && getPos(w.index()).startsWith("n")) {
                         target = w;
@@ -173,7 +178,7 @@ class SentenceDependencyAnalyzer {
                     }
                 }
             } else {
-                //找root前面的名词
+                //找root后面的名词
                 for (IndexedWord w: rootDepends) {
                     if (w.index() > root.index() && getPos(w.index()).startsWith("n")) {
                         target = w;
@@ -206,8 +211,9 @@ class SentenceDependencyAnalyzer {
         return term.getNatureStr();
     }
 
+    /*
     //below is for testing
-    private static final Pattern sentenceSplitReg = Pattern.compile("[。，！？,!?]");
+    private static final Pattern sentenceSplitReg = Pattern.compile("[。，！？,!?\\s]");
 
     private static String cleanOneSentence(String s, String kw) {
         int idx = s.indexOf(kw);
@@ -311,7 +317,7 @@ class SentenceDependencyAnalyzer {
         }
 
         for (String s: selectComments) {
-            SentenceDependencyAnalyzer analyzer = new SentenceDependencyAnalyzer(s);
+            SentenceGrammaAnalyzer analyzer = new SentenceGrammaAnalyzer(s, false);
             if (analyzer.isSentenceGoodCandidate()) {
                 return s;
             }
@@ -331,7 +337,7 @@ class SentenceDependencyAnalyzer {
         for (String s: featureSentences) {
             for (String fw: featureWords) {
                 if (s.contains(fw)) {
-                    SentenceDependencyAnalyzer analyzer = new SentenceDependencyAnalyzer(s);
+                    SentenceGrammaAnalyzer analyzer = new SentenceGrammaAnalyzer(s, false);
                     String ner = analyzer.extractNERForKeyword(fw);
                     if (!StringUtil.isBlank(ner)) {
                         featureEntities.add(ner);
@@ -389,12 +395,15 @@ class SentenceDependencyAnalyzer {
     }
 
     public static void main(String[] args) {
-        test(10, "/Users/yuyang/Desktop/recommend_generation/comments.csv");
+//        test(10, "/Users/yuyang/Desktop/recommend_generation/comments.csv");
 
-//        String text = "半只龙虾肉";
-//
-//        SentenceDependencyAnalyzer analyzer = new SentenceDependencyAnalyzer(text);
-//        System.out.println(analyzer.isSentenceGoodCandidate());
-//        System.out.println(analyzer.extractNERForKeyword("亮点"));
+        String text = "A区壁画是特色";
+
+        SentenceGrammaAnalyzer analyzer = new SentenceGrammaAnalyzer(text, true);
+        System.out.println(analyzer.isSentenceGoodCandidate());
+        System.out.println(analyzer.extractNERForKeyword("特色"));
     }
+    */
 }
+
+
