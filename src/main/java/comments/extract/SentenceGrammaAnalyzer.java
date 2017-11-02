@@ -169,7 +169,7 @@ public class SentenceGrammaAnalyzer {
         IndexedWord target = null;
         if (rootDepends.contains(word) || root.index() == word.index()) {
             //关键词也依赖于root或就是root
-            if (word.index() > root.index()) {
+            if (word.index() >= root.index()) {
                 //找root前面的名词
                 for (IndexedWord w: rootDepends) {
                     if (w.index() < root.index() && getPos(w.index()).startsWith("n")) {
