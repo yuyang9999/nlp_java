@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /**
  * Created by yuyang on 2/11/17.
  */
-public class ShopFeatureExtractor {
+public class PoiFeatureExtractor {
     private static final Pattern sSentenceSplitReg = Pattern.compile("[。，！？,!?\\s~]");
     private static Set<String> sFeatureWords;
     private static Set<String> sNegWords;
@@ -94,7 +94,7 @@ public class ShopFeatureExtractor {
         return featCommMap;
     }
 
-    public ShopFeatureExtractor(List<String> comments) {
+    public PoiFeatureExtractor(List<String> comments) {
         if (comments.size() > 0) {
            mFeatSenMap = findSubSentenceWithFeatureWords(comments, sFeatureWords, sNegWords);
         }
@@ -142,7 +142,7 @@ public class ShopFeatureExtractor {
 
         for (String commentsStr: shopComments) {
             String[] comments = commentsStr.substring(2, commentsStr.length() - 2).split("\",\"");
-            ShopFeatureExtractor extractor = new ShopFeatureExtractor(Arrays.asList(comments));
+            PoiFeatureExtractor extractor = new PoiFeatureExtractor(Arrays.asList(comments));
             List<String> sentences = extractor.getFeatureSentences();
             if (sentences.size() > 0) {
                 shopFeatureSentences.add(sentences);

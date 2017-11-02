@@ -404,6 +404,12 @@ public class SentenceGrammaAnalyzer {
         System.out.println(analyzer.extractNERForKeyword("特色"));
     }
     */
+
+    public static void main(String[] args) {
+        String ss = "面里的龙虾非常有新意";
+        SentenceGrammaAnalyzer analyzer = new SentenceGrammaAnalyzer(ss, true);
+        System.out.println(analyzer.extractNERForKeyword("新意"));
+    }
 }
 
 
