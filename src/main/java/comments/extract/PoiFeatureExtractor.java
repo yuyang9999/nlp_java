@@ -94,9 +94,17 @@ public class PoiFeatureExtractor {
         return featCommMap;
     }
 
-    public PoiFeatureExtractor(List<String> comments) {
+    /**
+     * constructor
+     * @param comments 一个商户下的评论数
+     * @param maxProcessCnt 最大处理评论数， -1表示处理传入的所有评论数
+     */
+    public PoiFeatureExtractor(List<String> comments, int maxProcessCnt) {
         if (comments.size() > 0) {
-           mFeatSenMap = findSubSentenceWithFeatureWords(comments, sFeatureWords, sNegWords);
+            if (maxProcessCnt > 0 && comments.size() > maxProcessCnt) {
+                comments = comments.subList(0, maxProcessCnt);
+            }
+            mFeatSenMap = findSubSentenceWithFeatureWords(comments, sFeatureWords, sNegWords);
         }
     }
 
@@ -114,7 +122,7 @@ public class PoiFeatureExtractor {
 
     public static void main(String[] args) {
         String filePath = "/Users/yuyang/Desktop/recommend_generation/comments.csv";
-        int numOfShop = 10;
+        int numOfShop = 100;
 
         List<String> shopComments = new ArrayList<String>();
         try {
@@ -138,11 +146,13 @@ public class PoiFeatureExtractor {
             e.printStackTrace();
         }
 
+        Date d1 = new Date();
+
         List<List<String>> shopFeatureSentences = new ArrayList<List<String>>();
 
         for (String commentsStr: shopComments) {
             String[] comments = commentsStr.substring(2, commentsStr.length() - 2).split("\",\"");
-            PoiFeatureExtractor extractor = new PoiFeatureExtractor(Arrays.asList(comments));
+            PoiFeatureExtractor extractor = new PoiFeatureExtractor(Arrays.asList(comments), 1000);
             List<String> sentences = extractor.getFeatureSentences();
             if (sentences.size() > 0) {
                 shopFeatureSentences.add(sentences);
@@ -150,6 +160,9 @@ public class PoiFeatureExtractor {
         }
 
         System.out.println(shopFeatureSentences);
+
+        Date d2 = new Date();
+        System.out.println((d2.getTime() - d1.getTime()) / 1000);
     }
 
 }
