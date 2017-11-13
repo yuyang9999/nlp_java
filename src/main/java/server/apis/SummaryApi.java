@@ -64,12 +64,12 @@ public class SummaryApi {
 
     @RequestMapping(version + "summary")
     public String getArticleSummary() {
-        return "test";
+        return "python_bridge";
     }
 
 
     @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.POST})
-    @RequestMapping(value = version + "test",
+    @RequestMapping(value = version + "python_bridge",
             method = RequestMethod.POST,
             consumes = {"application/json"},
             produces = {"application/json"})

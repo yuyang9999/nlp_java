@@ -354,7 +354,7 @@ public class SentenceGrammaAnalyzer {
     }
 
 
-    public static void test(int numOfShop, String filePath) {
+    public static void python_bridge(int numOfShop, String filePath) {
         List<String> shopComments = new ArrayList<String>();
 
         String[] fws = {"特色", "新意", "亮点", "出众", "独有"};
@@ -395,7 +395,7 @@ public class SentenceGrammaAnalyzer {
     }
 
     public static void main(String[] args) {
-//        test(10, "/Users/yuyang/Desktop/recommend_generation/comments.csv");
+//        python_bridge(10, "/Users/yuyang/Desktop/recommend_generation/comments.csv");
 
         String text = "A区壁画是特色";
 

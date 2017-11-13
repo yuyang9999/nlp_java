@@ -264,7 +264,7 @@ public class CorefResolution {
 
     public static void main(String[] args) throws Exception {
 //        selfTest();
-//        test();
+//        python_bridge();
         testChinese();
     }
 }
