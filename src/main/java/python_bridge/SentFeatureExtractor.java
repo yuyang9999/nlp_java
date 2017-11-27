@@ -31,8 +31,6 @@ public class SentFeatureExtractor {
             InputStream is = SentFeatureExtractor.class.getResourceAsStream("/dish_name.dic");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-
             String line;
             while ((line = reader.readLine()) != null) {
                 if (StringUtil.isBlank(line)) {
@@ -46,10 +44,27 @@ public class SentFeatureExtractor {
                 //add dish name as n to the ansj
                 DicLibrary.insert(DicLibrary.DEFAULT, line, "n", 1000);
             }
+
+            is = SentFeatureExtractor.class.getResourceAsStream("/ansj.dic");
+            reader = new BufferedReader(new InputStreamReader(is));
+            while ((line = reader.readLine()) != null) {
+                if (StringUtil.isBlank(line)) {
+                    continue;
+                }
+
+                String[] parts = line.split(" ");
+                if (parts.length != 2) {
+                    System.out.println("format error, check line " + line);
+                    continue;
+                }
+                String name =  parts[0];
+                String pos = parts[1];
+                DicLibrary.insert(DicLibrary.DEFAULT, name, pos, 1000);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 
@@ -202,7 +217,7 @@ public class SentFeatureExtractor {
 
 
     public static void main(String[] args) {
-        String text = "京酱肉丝味道不错";
+        String text = "台式三杯鸡饭蛮好吃的";
         Result r = ToAnalysis.parse(text);
         System.out.println(r);
 

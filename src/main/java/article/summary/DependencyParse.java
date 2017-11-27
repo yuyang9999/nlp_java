@@ -77,6 +77,7 @@ public class DependencyParse {
 //        dependencyParing(text);
         text = "不过海鲜真的蛮诱人的扇贝肉很大一个";
         text = "以后做西餐的时候";
+        text = "一碗饭吃得干净";
         hannlpDependParser(text);
     }
 }
