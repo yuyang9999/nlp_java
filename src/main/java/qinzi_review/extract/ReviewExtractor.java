@@ -1,6 +1,9 @@
 package qinzi_review.extract;
 
 import CommonUtility.Utility;
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
+import org.ansj.splitWord.analysis.ToAnalysis;
 import org.jsoup.helper.StringUtil;
 
 import java.io.*;
@@ -41,7 +44,7 @@ public class ReviewExtractor {
         return ret;
     }
 
-    static private List<String> getReviews(String path) {
+    static private List<String> getReviews(String path, boolean skipHead) {
         List<String> ret = new ArrayList<String>();
 
         BufferedReader reader = null;
@@ -51,12 +54,16 @@ public class ReviewExtractor {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 cnt ++;
-                if (cnt == 1) {
+                if (cnt == 1 && skipHead) {
                     continue;
                 }
 
                 String[] parts = line.split("\t");
-                String review = parts[8];
+                String review = parts[2];
+                review = review.substring(1, review.length() -  2);
+                review = review.replaceAll("\\\\n", "\n");
+                review = review.replaceAll("\\\\r", "\n");
+
                 ret.add(review);
             }
         } catch (FileNotFoundException e) {
@@ -92,6 +99,9 @@ public class ReviewExtractor {
 
         for (String review: reviews) {
             List<List<String>> sentences = Utility.splitParagraph(review);
+
+            List<String> goodSentences = new ArrayList<String>();
+
             for (List<String> ss: sentences) {
                 if (ss.size() > maxSubsenCnt) {
                     continue;
@@ -108,8 +118,15 @@ public class ReviewExtractor {
                     continue;
                 }
 
-                ret.add(sentence);
+                goodSentences.add(sentence);
+//                ret.add(sentence);
             }
+
+            if (goodSentences.size() > 0) {
+                String flattenReview = review.replace("\n", "。");
+                ret.add("[" + flattenReview + "]" + "\t" + StringUtil.join(goodSentences, ";"));
+            }
+
         }
 
         return ret;
@@ -129,7 +146,6 @@ public class ReviewExtractor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public static void main(String[] args) {
@@ -138,13 +154,20 @@ public class ReviewExtractor {
 
 
         //get reviews
-        List<String> reviews = getReviews("/Users/yuyang/Downloads/d619d09157eb422491570ef4be5e4edf.csv");
+        List<String> reviews = getReviews("/Users/yuyang/Desktop/temp/qinzi_examples.txt", false);
 
         List<String> candidates = findCandidateSentences(reviews);
 
         writeCandidates(candidates, "/Users/yuyang/Desktop/3.txt");
         System.out.println(candidates.size());
 
+
+//        String a = "a\\nb\\nc\\n";
+//        System.out.println(a);
+//
+//        Result result = ToAnalysis.parse("虽然是亲子游戏,但是大宝宝们玩的还是很嗨大");
+//        List<Term> terms = result.getTerms();
+//        System.out.println(terms);
     }
 
 
