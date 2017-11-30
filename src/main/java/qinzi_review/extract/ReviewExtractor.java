@@ -13,15 +13,95 @@ import java.util.*;
  * Created by yuyang on 28/11/17.
  */
 public class ReviewExtractor {
-    static private List<String> babyRefs;
-    static private List<String> goodWords;
+    private static class FilterTemplate {
+        private List<String> nouns;
+        private List<String> adjs;
+
+        public FilterTemplate(String nounsStr, String adjsStr, String seperator) {
+            String[] ns = nounsStr.split(seperator);
+            String[] ajs = adjsStr.split(seperator);
+
+            nouns = new ArrayList<String>();
+            adjs = new ArrayList<String>();
+
+            for (String n: ns) {
+                n = n.trim();
+                if (!StringUtil.isBlank(n)) {
+                    nouns.add(n);
+                }
+            }
+            for (String a: ajs) {
+                a = a.trim();
+                if (!StringUtil.isBlank(a)) {
+                    adjs.add(a);
+                }
+            }
+        }
+
+        public boolean isSentenceMatchTemplate(String sentence) {
+            if (StringUtil.isBlank(sentence)) {
+                return false;
+            }
+
+            boolean ret = false;
+            boolean hasNoun = false, hasAdj = false;
+            for (String s: nouns) {
+                if (sentence.contains(s)) {
+                    hasNoun = true;
+                    break;
+                }
+            }
+            for (String s: adjs) {
+                if (sentence.contains(s)) {
+                    hasAdj = true;
+                    break;
+                }
+            }
+
+            ret = hasNoun & hasAdj;
+            return ret;
+        }
+    }
+
+    static private List<FilterTemplate> templates;
+
+
+//    static private List<String> babyRefs;
+//    static private List<String> goodWords;
     static private List<String> badWords;
     static private final int maxSubsenCnt = 4;
 
     static {
-        babyRefs = loadFileContentents("/baby_refs.txt");
-        goodWords = loadFileContentents("/good_adj.txt");
+        templates = loadTemlates("/extractor_templates.txt", ";", " ");
         badWords = loadFileContentents("/bad_adj.txt");
+    }
+
+    /**
+     * load templates
+     * @param filePath template file path
+     * @param sep1 separator between nouns and adjs
+     * @param sep2 separator between nouns or between adjs
+     * @return a list of FilterTemplates
+     */
+    static private List<FilterTemplate> loadTemlates(String filePath, String sep1, String sep2) {
+        List<FilterTemplate> ret = new ArrayList<FilterTemplate>();
+        InputStream is = ReviewExtractor.class.getResourceAsStream(filePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        try {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                if (!StringUtil.isBlank(line)) {
+                    String[] parts = line.split(sep1);
+                    assert(parts.length == 2);
+                    FilterTemplate t = new FilterTemplate(parts[0], parts[1], sep2);
+                    ret.add(t);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return ret;
     }
 
     static private List<String> loadFileContentents(String path) {
@@ -108,18 +188,21 @@ public class ReviewExtractor {
                 }
 
                 String sentence = StringUtil.join(ss, ",");
-                if (!isSentenceContainOneWordInArray(sentence, babyRefs)) {
-                    continue;
-                }
                 if (isSentenceContainOneWordInArray(sentence, badWords)) {
                     continue;
                 }
-                if (!isSentenceContainOneWordInArray(sentence, goodWords)) {
-                    continue;
+
+                boolean matchTemplate = false;
+                for (FilterTemplate t: templates) {
+                    if (t.isSentenceMatchTemplate(sentence)) {
+                        matchTemplate = true;
+                        break;
+                    }
                 }
 
-                goodSentences.add(sentence);
-//                ret.add(sentence);
+                if (matchTemplate) {
+                    goodSentences.add(sentence);
+                }
             }
 
             if (goodSentences.size() > 0) {
@@ -149,10 +232,6 @@ public class ReviewExtractor {
     }
 
     public static void main(String[] args) {
-//        List<String> reviews = Arrays.asList("两对情侣在泡泡池里热吻我又不好意思打扰 我就只能看啊 派对连杯酒都没有 连个帅哥也看不到这派对和小学生聚餐有啥区别说到小学生");
-//        findCandidateSentences(reviews);
-
-
         //get reviews
         List<String> reviews = getReviews("/Users/yuyang/Desktop/temp/qinzi_examples.txt", false);
 
@@ -162,6 +241,7 @@ public class ReviewExtractor {
         System.out.println(candidates.size());
 
 
+//
 //        String a = "a\\nb\\nc\\n";
 //        System.out.println(a);
 //
